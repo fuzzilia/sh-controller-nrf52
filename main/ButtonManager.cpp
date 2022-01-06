@@ -2,25 +2,31 @@
 #include <cstring>
 
 ButtonManager::ButtonManager(
-    uint8_t buttonPins[],
-    size_t buttonPinSize,
+    const std::array<uint8_t, 4>& buttonPins,
+    const std::array<uint8_t, 3>& buttonControlPins,
+    ChangeCheckPin changeCheckPin,
     IsOnFunc isOnFunc,
     ChangeKeyFunc changeKey
 ):
-    m_buttonPins(new uint8_t[buttonPinSize]),
-    m_buttonPinSize(buttonPinSize),
+    m_buttonPins(buttonPins),
+    m_buttonControlPins(buttonControlPins),
     m_keyConfig(),
+    m_changeCheckPin(changeCheckPin),
     m_isOnFunc(isOnFunc),
     m_changeKey(changeKey)
 {
-    memcpy(m_buttonPins.get(), buttonPins, buttonPinSize);
 }
 
 void ButtonManager::checkButtonState() {
     auto nextState = m_state;
-    for (int i = 0; i < m_buttonPinSize; i++) {
-        const auto pin = m_buttonPins[i];
-        nextState.setIsPushed(i, m_isOnFunc(pin));
+    uint8_t number = 0;
+
+    for (const uint8_t& c: m_buttonControlPins) {
+        m_changeCheckPin(c);
+        for (const uint8_t& b: m_buttonPins) {
+            nextState.setIsPushed(number, m_isOnFunc(b));
+            ++number;
+        }
     }
 
     if (nextState != m_state) {

@@ -1,27 +1,28 @@
 #include <Adafruit_DotStar.h>
 #include <bluefruit.h>
 #include <InternalFileSystem.h>
+#include <array>
 #include "KeyService.h"
 #include "KeyConfigService.h"
 #include "KeyConfigLoader.h"
 #include "ButtonManager.h"
 
-#define SELECT_PIN PIN_A0
+#define SELECT_PIN 9
 
 Adafruit_DotStar strip(1, PIN_DOTSTAR_DATA, PIN_DOTSTAR_CLOCK, DOTSTAR_BRG);
 BLEDis bledis;
 bool isConfigMode = false;
-uint8_t buttonPins[] = {
-    PIN_BUTTON1,
-    PIN_A0,
-    PIN_A1,
-    PIN_A2,
-    PIN_A3,
-    PIN_A4,
-    PIN_A5,
-    11,
-    12,
-    13};
+std::array<uint8_t, 4> buttonPins = {
+  12,
+  11,
+  10,
+  9,
+};
+std::array<uint8_t, 3> buttonControlPins = {
+  PIN_A0,
+  PIN_A1,
+  PIN_A2,
+};
 
 bool pinIsOn(uint8_t pin)
 {
@@ -34,7 +35,14 @@ bool pinIsOn(uint8_t pin)
   return isOn;
 }
 
-ButtonManager buttonManager(buttonPins, sizeof(buttonPins), pinIsOn, sendKey);
+void changeCheckPin(uint8_t pin)
+{
+  digitalWrite(PIN_A0, (PIN_A0 == pin ? LOW : HIGH));
+  digitalWrite(PIN_A1, (PIN_A1 == pin ? LOW : HIGH));
+  digitalWrite(PIN_A2, (PIN_A2 == pin ? LOW : HIGH));
+}
+
+ButtonManager buttonManager(buttonPins, buttonControlPins, changeCheckPin, pinIsOn, sendKey);
 KeyConfig keyConfig;
 
 void setup()
@@ -56,6 +64,8 @@ void setup()
 
   InternalFS.begin();
 
+  // 左下のボタンが押されているかどうかをチェック.
+  changeCheckPin(PIN_A0);
   isConfigMode = digitalRead(SELECT_PIN) == LOW;
 
   strip.begin();
