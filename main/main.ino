@@ -26,20 +26,20 @@ std::array<uint8_t, 3> buttonControlPins = {
 
 bool pinIsOn(uint8_t pin)
 {
-  // Serial.print("Pin[");
-  // Serial.print(pin);
-  // Serial.print("] : ");
+  Serial.print("Pin[");
+  Serial.print(pin);
+  Serial.print("] : ");
   bool isOn = digitalRead(pin) == 0;
-  // Serial.print(isOn);
-  // Serial.print("\n");
+  Serial.print(isOn);
+  Serial.print("\n");
   return isOn;
 }
 
 void changeCheckPin(uint8_t pin)
 {
-  digitalWrite(PIN_A0, (PIN_A0 == pin ? LOW : HIGH));
-  digitalWrite(PIN_A1, (PIN_A1 == pin ? LOW : HIGH));
-  digitalWrite(PIN_A2, (PIN_A2 == pin ? LOW : HIGH));
+  analogWrite(PIN_A0, (PIN_A0 == pin ? 0 : 255));
+  analogWrite(PIN_A1, (PIN_A1 == pin ? 0 : 255));
+  analogWrite(PIN_A2, (PIN_A2 == pin ? 0 : 255));
 }
 
 ButtonManager buttonManager(buttonPins, buttonControlPins, changeCheckPin, pinIsOn, sendKey);
@@ -57,9 +57,13 @@ void setup()
     delay(10); // for nrf52840 with native usb
 
   pinMode(SELECT_PIN, INPUT_PULLUP);
-  for (int i = 0; i < sizeof(buttonPins); i++)
+  for (int i = 0; i < buttonPins.size(); i++)
   {
     pinMode(buttonPins[i], INPUT_PULLUP);
+  }
+  for (int i = 0; i < buttonControlPins.size(); i++)
+  {
+    pinMode(buttonControlPins[i], OUTPUT);
   }
 
   InternalFS.begin();
